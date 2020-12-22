@@ -92,7 +92,10 @@ void Open(char (*visual)[20],char (*ans)[20],char (*ans1)[20],int32_t width,int3
 		{
 			if(visual[row][column]=='*')
 			{
-				Open_space(visual,ans,ans1,width,height,mine,row,column);
+				if(ans1[row][column]==' ')
+				{
+					Open_space(visual,ans,ans1,width,height,mine,row,column);
+				}
 				else
 				visual[row][column]=ans1[row][column];
 				times=1;
@@ -105,17 +108,14 @@ void Open(char (*visual)[20],char (*ans)[20],char (*ans1)[20],int32_t width,int3
 
 void Open_space(char (*visual)[20],char (*ans)[20],char (*ans1)[20],int32_t width,int32_t height,int32_t mine,int32_t row,int32_t column)
 {
-	if(ans1[row][column]==' ')
+	for(int i=row-1;i<=row+1;i++)
 	{
-		for(int i=row-1;i<=row+1;i++)
+		for(int j=column-1;j<=column+1;j++)
 		{
-			for(int j=column-1;j<=column+1;j++)
+			if(ans1[i][j]==' ')
 			{
-				if(ans1[i][j]==' ')
-				{
-					ans1[i][j]='0';
-					Check(visual,ans,ans1,width,height,mine,i,j);
-				}
+				ans1[i][j]='0';
+				Check(visual,ans,ans1,width,height,mine,i,j);
 			}
 		}
 	}
