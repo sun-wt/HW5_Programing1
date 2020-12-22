@@ -1,5 +1,5 @@
 #include"hw0505.h"
-void Printer(char *visual,int32_t width,int32_t height)
+void Printer(char (*visual)[20],int32_t width,int32_t height)
 {
 	printf("    ");
 	for(int i=0;i<width;i++)
@@ -17,13 +17,13 @@ void Printer(char *visual,int32_t width,int32_t height)
 		printf("%02d| ",k);
 		for(int l=0;l<width;l++)
 		{
-			printf("%2c ",visual[k*width+l]);
+			printf("%2c ",visual[k][l]);
 		}
 		printf("\n");
 	}
 	printf("\n");
 }
-void Flag(char *visual,int32_t width,int32_t height)
+void Flag(char (*visual)[20],int32_t width,int32_t height)
 {
 	int32_t row,column;
 	bool times=0;
@@ -37,15 +37,14 @@ void Flag(char *visual,int32_t width,int32_t height)
 			printf("invaild input1!\n");
 			else break;
 		}while(row>height || column>width);
-		int32_t position=row*width+column;
-		if(visual[position]=='F')
+		if(visual[row][column]=='F')
 		{
-			visual[position]='*';
+			visual[row][column]='*';
 			times=1;
 		}
-		else if(visual[position]=='*')
+		else if(visual[row][column]=='*')
 		{
-			visual[position]='F';
+			visual[row][column]='F';
 			times=1;
 		}
 		else times=0;
@@ -57,25 +56,12 @@ void Flag(char *visual,int32_t width,int32_t height)
 	}while(times==0);
 }
 
-void Open(char*visual,char*ans,char*ans1,int32_t width,int32_t height,int32_t mine)
+void Open(char (*visual)[20],char (*ans)[20],char (*ans1)[20],int32_t width,int32_t height,int32_t mine,int32_t row,int32_t column)
 {
-	int32_t row,column;
 	bool times=0;
 	do
 	{
-		do
-		{
-			printf("Position (row,column):");
-			scanf("%d %d",&row,&column);
-			if(row>height || column>width)
-			{
-				printf("%d>%d||%d>%d\n",row,height,column,width);
-				printf("invaild input!\n");
-			}
-			else break;
-		}while(row>height || column>width);
-		int32_t position=row*width+column;
-		if(ans1[position]=='X')
+		if(ans1[row][column]=='X')
 		{
 			printf("\033[31mBomb! You lose!\n\033[0m");
 			printf("\033[31mThe answer is:\n\033[0m");
@@ -95,7 +81,7 @@ void Open(char*visual,char*ans,char*ans1,int32_t width,int32_t height,int32_t mi
 				printf("%02d| ",k);
 				for(int l=0;l<width;l++)
 				{
-					printf("\033[31m%2c \033[0m",ans1[k*width+l]);
+					printf("\033[31m%2c \033[0m",ans1[k][l]);
 				}
 				printf("\n");
 			}
@@ -104,9 +90,11 @@ void Open(char*visual,char*ans,char*ans1,int32_t width,int32_t height,int32_t mi
 		}
 		else 
 		{
-			if(visual[position]=='*')
+			if(visual[row][column]=='*')
 			{
-				visual[position]=ans1[position];
+				Open_space(visual,ans,ans1,width,height,mine,row,column);
+				else
+				visual[row][column]=ans1[row][column];
 				times=1;
 			}
 			else
@@ -114,8 +102,32 @@ void Open(char*visual,char*ans,char*ans1,int32_t width,int32_t height,int32_t mi
 		}
 	}while(times==0);
 }
+
+void Open_space(char (*visual)[20],char (*ans)[20],char (*ans1)[20],int32_t width,int32_t height,int32_t mine,int32_t row,int32_t column)
+{
+	if(ans1[row][column]==' ')
+	{
+		for(int i=row-1;i<=row+1;i++)
+		{
+			for(int j=column-1;j<=column+1;j++)
+			{
+				if(ans1[i][j]==' ')
+				{
+					ans1[i][j]='0';
+					Check(visual,ans,ans1,width,height,mine,i,j);
+				}
+			}
+		}
+	}
+}
+void Check(char (*visual)[20],char (*ans)[20],char (*ans1)[20],int32_t width,int32_t height,int32_t mine,int32_t row,int32_t column)
+{
+	if(ans1[row][column]!=' ')
+	Open(visual,ans,ans1,width,height,mine,row,column);
+}
+
 //輸贏
-void win(char *visual,int32_t width,int32_t height,int32_t mine)
+void win(char (*visual)[20],int32_t width,int32_t height,int32_t mine)
 {
 	int test=0;
 	int flag=0;
@@ -123,7 +135,7 @@ void win(char *visual,int32_t width,int32_t height,int32_t mine)
 	{
 		for(int testY=0;testY<width;testY++)
 		{
-			if(visual[testX*width+testY]=='*')
+			if(visual[testX][testY]=='*')
 			test++;
 		}
 	}
@@ -134,7 +146,7 @@ void win(char *visual,int32_t width,int32_t height,int32_t mine)
 	}
 }
 //炸彈//
-void RandomBomb(char*ans,char*ans1,int32_t width,int32_t height,int32_t mine)
+void RandomBomb(char (*ans)[20],char (*ans1)[20],int32_t width,int32_t height,int32_t mine)
 {
 	int i=0;
 	int times;
@@ -145,125 +157,36 @@ void RandomBomb(char*ans,char*ans1,int32_t width,int32_t height,int32_t mine)
 	{
 		int a=(rand()%height)+0;
 		int b=(rand()%width)+0;
-		if(ans[a*width+b]==' ')
+		if(ans[a][b]==' ')
 		{
-			ans[a*width+b]='X';
+			ans[a][b]='X';
 			i=i+1;
 		}
 	}
 	char temp[9]={' ','1','2','3','4','5','6','7','8'};
-	int array00[]={4,6,7};
-	int array01[]={3,5,6};
-	int array10[]={1,2,4};
-	int array11[]={0,1,3};
-	int arrayh0[]={3,4,5,6,7};
-	int arrayh1[]={0,1,2,3,4};
-	int arrayw0[]={1,2,4,6,7};
-	int arrayw1[]={0,1,3,5,6};
-	int Judge[8]={0};
-	for(int judge=0;judge<8;)
-	{
-		for(int k=-1;k<2;k++)
-		{
-			for(int l=-1;l<2;l++)
-			{
-				if(k==0 && l==0)
-				continue;
-				else
-				{
-					Judge[judge]=k*width+l;
-					judge++;
-				}
-			}
-		}
-	}
 	for(int x=0;x<height;x++)
 	{
 		for(int y=0;y<width;y++)
 		{
-			if(ans[x*width+y]=='X')
-			ans1[x*width+y]='0';
+			if(ans[x][y]=='X')
+			ans1[x][y]='0';
 			else
 			{ 
 				condition=1;
-				if((x>0&&x<height-1)&&(y>0&&y<width-1))
+				for(int a=-1;a<=1;a++)
 				{
-					for(int a=0;a<8;a++)
+					for(int b=-1;b<=1;b++)
 					{
-						if(ans[x*width+y+Judge[a]]=='X')
-						times++;
-					}
-				}	
-				else if(x==0&&y==0) 
-				{
-					for(int a=0;a<3;a++)
-					{
-						if(ans[x*width+y+Judge[array00[a]]]=='X')
-						times++;
-					}
-				}
-				else if(x==0&&y==width-1) 
-				{
-					for(int a=0;a<3;a++)
-					{
-						if(ans[x*width+y+Judge[array01[a]]]=='X')
-						times++;
-					}
-				}
-				else if(x==height-1&&y==0) 
-				{
-					for(int a=0;a<3;a++)
-					{
-						if(ans[x*width+y+Judge[array10[a]]]=='X')
-						times++;
-					}
-				}
-				else if(x==height-1&&y==width-1) 
-				{
-					for(int a=0;a<3;a++)
-					{
-						if(ans[x*width+y+Judge[array11[a]]]=='X')
-						times++;
-					}
-				}
-				else if(x==0&&(y!=0||y!=width-1)) 
-				{
-					for(int a=0;a<5;a++)
-					{
-						if(ans[x*width+y+Judge[arrayh0[a]]]=='X')
-						times++;
-					}
-				}
-				else if(x==width-1&&(y!=0||y!=width-1)) 
-				{
-					for(int a=0;a<5;a++)
-					{
-						if(ans[x*width+y+Judge[arrayh1[a]]]=='X')
-						times++;
-					}
-				}
-				else if((x!=0||x!=height-1)&&y==0) 
-				{
-					for(int a=0;a<5;a++)
-					{
-						if(ans[x*width+y+Judge[arrayw0[a]]]=='X')
-						times++;
-					}
-				}
-				else if((x!=0||x!=height-1)&&y==width-1) 
-				{
-					for(int a=0;a<5;a++)
-					{
-						if(ans[x*width+y+Judge[arrayw1[a]]]=='X')
+						if(ans[x+a][y+b]=='X')
 						times++;
 					}
 				}
 			}
 			if(condition==1)
-			ans1[x*width+y]=temp[times];
+			ans1[x][y]=temp[times];
 			
-			if(ans[x*width+y]=='X')
-			ans1[x*width+y]='X';
+			if(ans[x][y]=='X')
+			ans1[x][y]='X';	
 			times=0;
 		}		
 	}
